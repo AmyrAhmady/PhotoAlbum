@@ -11,21 +11,29 @@ namespace Album
     {
         Database Database;
         Dictionary<string, string> Images = new Dictionary<string, string>();
+        List<Photo> Album = new List<Photo>();
 
         public main()
         {
             InitializeComponent();
+
             Database = new Database(this);
             Database.Load();
         }
 
+        public void AddToControls(Control value)
+        {
+            Controls.Add(value);
+        }
+
         private void UpdatePictureList()
         {
-            pictureList.Items.Clear();
+            ClearAlbum();
             foreach (KeyValuePair<string, string> entry in Images)
             {
-                pictureList.Items.Add(entry.Key);
+                AddToAlbum(entry);
             }
+            RenderAlbum(Album.Count);
         }
 
         public void UpdateImages(Dictionary<string, string> list)
@@ -59,29 +67,38 @@ namespace Album
             UpdatePictureList();
         }
 
-        private void removeButton_Click(object sender, EventArgs e)
+        public void ClearAlbum()
         {
-            try
+            foreach (Photo pic in Album)
             {
-                Images.Remove(pictureList.SelectedItem.ToString());
+                Controls.Remove(pic.GetPicBox());
             }
-            catch
+                
+            Album.Clear();
+        }
+
+        public void AddToAlbum(KeyValuePair<string, string> item)
+        {
+            Photo tempPhoto = new Photo(item, this);
+            Album.Add(tempPhoto);
+        }
+
+        public void RenderAlbum(int count)
+        {
+            for (int i = 0; i < count; i++)
             {
-                MessageBox.Show("Couldn't remove this picture");
-            }
-            Database.Remove(pictureList.SelectedItem.ToString());
-            UpdatePictureList();
-            
-            foreach (KeyValuePair<string, string> entry in Images)
-            {
-                pictureBox.Image = Image.FromStream(new MemoryStream(Convert.FromBase64String(entry.Value)));
-                break;
+                int row = i / 5;
+                int column = i % 5;
+                Album[i].SetPosition(10 + (column * 100), 40 + (row * 100));
             }
         }
 
-        private void pictureList_SelectedIndexChanged(object sender, EventArgs e)
+        public void ShowFullScreenPhoto(Image image)
         {
-            pictureBox.Image = Image.FromStream(new MemoryStream(Convert.FromBase64String(Images[pictureList.SelectedItem.ToString()])));
+            Transparent BGForm = new Transparent();
+            FSPhoto PhotoForm = new FSPhoto(BGForm);
+            BGForm.SetMainPhotoForm(PhotoForm);
+            PhotoForm.Open(image);
         }
     }
 }
